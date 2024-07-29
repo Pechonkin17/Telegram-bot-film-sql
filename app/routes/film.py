@@ -89,7 +89,7 @@ async def check_film_title(message: Message, state: FSMContext) -> None:
 
     if film:
         await state.update_data(title=title)
-        await state.set_state(FilmCreateUpdateForm.fdesciption)
+        await state.set_state(FilmCreateUpdateForm.fdescription)
         await message.answer(
             f"Film '{title}' found. Input new description:",
             reply_markup=ReplyKeyboardRemove()
