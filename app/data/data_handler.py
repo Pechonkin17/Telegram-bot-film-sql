@@ -1,4 +1,7 @@
 from app.data.database import create_connection
+
+
+
 def get_films():
     connection = create_connection()
     cursor = connection.cursor()
@@ -19,6 +22,7 @@ def get_films():
         }
         film_dicts.append(film_dict)
     return film_dicts
+
 
 def get_film_by_title(title):
     connection = create_connection()
@@ -75,6 +79,7 @@ def delete_film(title):
     connection.close()
     return True
 
+
 def update_film(title, updated_film):
     connection = create_connection()
     cursor = connection.cursor()
@@ -94,6 +99,7 @@ def update_film(title, updated_film):
     connection.commit()
     cursor.close()
     connection.close()
+
 
 def find_film(title):
     connection = create_connection()
@@ -115,6 +121,7 @@ def find_film(title):
             'rating': film[5]
         }
         return film_dict
+
 
 def find_films_by_partial_title(title):
     connection = create_connection()

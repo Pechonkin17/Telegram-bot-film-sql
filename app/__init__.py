@@ -12,10 +12,14 @@ from dotenv import load_dotenv
 
 from .routes import film_router, check_commands
 
+
+
 load_dotenv()
+
 
 root_router = Router()
 root_router.include_router(film_router)
+
 
 async def set_commands(bot: Bot):
     commands = [
@@ -29,12 +33,16 @@ async def set_commands(bot: Bot):
     ]
     await bot.set_my_commands(commands)
 
+
+
 @root_router.message(CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
     await check_commands(message, state)
 
     await set_commands(message.bot)
     await message.answer(f"Hi : {hbold(message.from_user.full_name)}!")
+
+
 
 @root_router.message(lambda message: message.text == '/help')
 async def command_help_handler(message: Message, state: FSMContext) -> None:
@@ -51,6 +59,8 @@ async def command_help_handler(message: Message, state: FSMContext) -> None:
         "/help - Get all commands\n"
     )
     await message.answer(help_text)
+
+
 
 async def main() -> None:
     TOKEN = getenv("BOT_TOKEN")

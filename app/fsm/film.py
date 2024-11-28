@@ -8,11 +8,14 @@ class FilmCreateUpdateForm(StatesGroup):
     photo_url = State()
     rating = State()
 
+
 class FilmDeleteForm(StatesGroup):
     title = State()
 
+
 class FilmFindForm(StatesGroup):
     title = State()
+
 
 class FilmUpdateForm(StatesGroup):
     title = State()

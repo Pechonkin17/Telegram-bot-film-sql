@@ -9,7 +9,10 @@ from ..data import get_films, get_film_by_title, create_film, delete_film, updat
 from ..fsm import FilmCreateUpdateForm, FilmDeleteForm, FilmFindForm, FilmUpdateForm
 from ..keyboards import build_films_keyboard, build_details_keyboard
 
+
+
 film_router = Router()
+
 
 @film_router.message(Command("films"))
 @film_router.message(F.text.casefold().contains("films"))
@@ -30,6 +33,8 @@ async def show_films_command(message: Message, state: FSMContext):
             reply_markup=keyboard
         )
 
+
+
 @film_router.callback_query(F.data.startswith("film_"))
 async def show_film_details(callback: CallbackQuery, state: FSMContext) -> None:
     await check_commands(callback.message, state)
@@ -46,11 +51,7 @@ async def show_film_details(callback: CallbackQuery, state: FSMContext) -> None:
         build_details_keyboard(url)
     )
 
-async def edit_or_answer(message: Message, text: str, keyboard, **kwards):
-    if message.from_user.is_bot:
-        await message.edit_text(text=text, reply_markup=keyboard, **kwards)
-    else:
-        await message.answer(text=text, reply_markup=keyboard, **kwards)
+
 
 @film_router.message(Command("create_film"))
 @film_router.message(F.text.casefold() == "create film")
@@ -65,6 +66,18 @@ async def create_film_command(message: Message, state: FSMContext) -> None:
         "Input title",
         ReplyKeyboardRemove()
     )
+
+
+@film_router.message(FilmCreateUpdateForm.title)
+async def process_title(message: Message, state: FSMContext) -> None:
+    await state.update_data(title=message.text)
+    await state.set_state(FilmCreateUpdateForm.fdescription)
+    await edit_or_answer(
+        message,
+        "Input description",
+        ReplyKeyboardRemove()
+    )
+
 
 
 @film_router.message(Command("update_film"))
@@ -100,53 +113,8 @@ async def check_film_title(message: Message, state: FSMContext) -> None:
         )
         await state.clear()
 
-@film_router.message(Command("delete_film"))
-@film_router.message(F.text.casefold() == "delete film")
-async def delete_film_command(message: Message, state: FSMContext) -> None:
-    await check_commands(message, state)
 
-    await state.clear()
-    await state.update_data(action="delete")
-
-    await state.set_state(FilmDeleteForm.title)
-    await edit_or_answer(
-        message,
-        "Enter title or type 'back' to cancel",
-        ReplyKeyboardRemove()
-    )
-
-@film_router.message(FilmDeleteForm.title)
-async def process_delete_film(message: Message, state: FSMContext) -> None:
-    await state.update_data(title=message.text)
-    title = (await state.get_data()).get('title')
-    await state.clear()
-
-    if title and delete_film(title):
-        await edit_or_answer(
-            message,
-            "Deleted successfully",
-            ReplyKeyboardRemove()
-        )
-    elif title == 'back':
-        return await show_films_command(message, state)
-    else:
-        await edit_or_answer(
-            message,
-            "Film with this title was not found",
-            ReplyKeyboardRemove()
-        )
-    return await show_films_command(message, state)
-
-@film_router.message(FilmCreateUpdateForm.title)
-async def process_title(message: Message, state: FSMContext) -> None:
-    await state.update_data(title=message.text)
-    await state.set_state(FilmCreateUpdateForm.fdescription)
-    await edit_or_answer(
-        message,
-        "Input description",
-        ReplyKeyboardRemove()
-    )
-
+""" Create&Update methods have the same FSM"""
 @film_router.message(FilmCreateUpdateForm.fdescription)
 async def process_fdescription(message: Message, state: FSMContext) -> None:
     data = await state.update_data(fdescription=message.text)
@@ -156,6 +124,7 @@ async def process_fdescription(message: Message, state: FSMContext) -> None:
         f"Enter url of {hbold(data.get('title'))}",
         ReplyKeyboardRemove()
     )
+
 
 @film_router.message(FilmCreateUpdateForm.url)
 @film_router.message(F.text.contains('http'))
@@ -175,6 +144,7 @@ async def process_url(message: Message, state: FSMContext) -> None:
             "The URL provided is not valid. Please enter a valid URL."
         )
 
+
 @film_router.message(FilmCreateUpdateForm.photo_url)
 @film_router.message(F.photo)
 async def process_photo_url(message: Message, state: FSMContext) -> None:
@@ -188,6 +158,7 @@ async def process_photo_url(message: Message, state: FSMContext) -> None:
         "Rating 1 to 10",
         ReplyKeyboardRemove()
     )
+
 
 @film_router.message(FilmCreateUpdateForm.rating)
 async def process_rating(message: Message, state: FSMContext) -> None:
@@ -227,9 +198,51 @@ async def process_rating(message: Message, state: FSMContext) -> None:
     else:
         await message.answer("Film not found. Database ERROR")
 
+
+
+@film_router.message(Command("delete_film"))
+@film_router.message(F.text.casefold() == "delete film")
+async def delete_film_command(message: Message, state: FSMContext) -> None:
+    await check_commands(message, state)
+
+    await state.clear()
+    await state.update_data(action="delete")
+
+    await state.set_state(FilmDeleteForm.title)
+    await edit_or_answer(
+        message,
+        "Enter title or type 'back' to cancel",
+        ReplyKeyboardRemove()
+    )
+
+
+@film_router.message(FilmDeleteForm.title)
+async def process_delete_film(message: Message, state: FSMContext) -> None:
+    await state.update_data(title=message.text)
+    title = (await state.get_data()).get('title')
+    await state.clear()
+
+    if title and delete_film(title):
+        await edit_or_answer(
+            message,
+            "Deleted successfully",
+            ReplyKeyboardRemove()
+        )
+    elif title == 'back':
+        return await show_films_command(message, state)
+    else:
+        await edit_or_answer(
+            message,
+            "Film with this title was not found",
+            ReplyKeyboardRemove()
+        )
+    return await show_films_command(message, state)
+
+
+
 @film_router.message(Command("find_film"))
 @film_router.message(F.text.casefold() == "find film")
-async def find_film_command(message: Message, state: FSMContext) -> None:
+async def find_film_with_title_command(message: Message, state: FSMContext) -> None:
     await check_commands(message, state)
 
     await state.clear()
@@ -240,6 +253,7 @@ async def find_film_command(message: Message, state: FSMContext) -> None:
         "Enter title or part of the title",
         ReplyKeyboardRemove()
     )
+
 
 @film_router.message(FilmFindForm.title)
 async def process_find_film(message: Message, state: FSMContext) -> None:
@@ -267,9 +281,13 @@ async def process_find_film(message: Message, state: FSMContext) -> None:
             reply_markup=keyboard
         )
 
+
+
 @film_router.callback_query(F.data == 'back')
 async def back_handler(callback: CallbackQuery, state) -> None:
     return await show_films_command(callback.message, state)
+
+
 
 async def check_commands(message: Message, state: FSMContext):
     action = (await state.get_data()).get('action')
@@ -279,3 +297,10 @@ async def check_commands(message: Message, state: FSMContext):
             text=f"action {hbold(action)} canceled",
             reply_markup=ReplyKeyboardRemove()
         )
+
+
+async def edit_or_answer(message: Message, text: str, keyboard, **kwards):
+    if message.from_user.is_bot:
+        await message.edit_text(text=text, reply_markup=keyboard, **kwards)
+    else:
+        await message.answer(text=text, reply_markup=keyboard, **kwards)
