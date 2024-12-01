@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.utils.markdown import hbold
 
-from ..data import get_films, get_film_by_title, create_film, delete_film, update_film, find_film, find_films_by_partial_title
+from ..data import get_films, get_film_by_id, create_film, delete_film, update_film, find_film, find_films_by_partial_title
 from ..fsm import FilmCreateUpdateForm, FilmDeleteForm, FilmFindForm, FilmUpdateForm
 from ..keyboards import build_films_keyboard, build_details_keyboard
 
@@ -40,7 +40,7 @@ async def show_film_details(callback: CallbackQuery, state: FSMContext) -> None:
     await check_commands(callback.message, state)
 
     film_id = int(callback.data.split("_")[-1])
-    film = get_film_by_title(film_id)
+    film = get_film_by_id(film_id)
     text = f"Name: {hbold(film.get('title'))}\nDescription: {hbold(film.get('fdescription'))}\nRating: {hbold(film.get('rating'))}"
     photo_id = film.get('photo_url')
     url = film.get('url')
