@@ -20,7 +20,7 @@ def get_films():
 
 def get_film_by_id(id):
     with Session() as session:
-        film = session.query(Film).filter(Film.id == title).first()
+        film = session.query(Film).filter(Film.id == id).first()
         if not film:
             return {}
         return {
